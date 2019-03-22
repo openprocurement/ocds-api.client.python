@@ -20,11 +20,9 @@ def test_base_client_init():
     assert client.resource_param == 'ocid='
 
     resource = 'release'
-    api_version = '1.0'
-    client = BaseClient(host, resource=resource, api_version=api_version)
+    client = BaseClient(host, resource=resource)
     assert client.host_url == host
     assert client.resource == resource
-    assert client.prefix_path == f'{host}/api/{api_version}'
     assert client.resource_param == 'releaseID='
 
 

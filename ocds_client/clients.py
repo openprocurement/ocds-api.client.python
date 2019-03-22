@@ -15,18 +15,17 @@ class BaseClient(ClientTemplate):
     """Base client for OCDS"""
     resource = ''
 
-    def __init__(self, host_url='', api_version=None, resource=None, params={}, auth=None, headers=None):
+    def __init__(self, host_url='', resource=None, params={}, auth=None, headers=None):
         if not host_url:
             raise Exception('Please provide OCDS API url.')
         super().__init__(auth=auth, headers=headers)
         self.params = params
         self.host_url = host_url
-        self.api_version = api_version
         self.resource = resource or self.resource
         if not self.resource:
             raise Exception('Please provide resource.')
         self.resource_param = 'ocid=' if self.resource == 'record' else 'releaseID='
-        self.prefix_path = f'{self.host_url}/api/{self.api_version}' if self.api_version else f'{self.host_url}/api'
+        self.prefix_path = f'{self.host_url}/api'
 
     @backoff.on_exception(backoff.expo, RequestFailed, max_tries=5)
     def _get_resource_item(self, url, headers=None):

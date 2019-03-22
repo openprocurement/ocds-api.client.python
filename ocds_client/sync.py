@@ -25,7 +25,6 @@ class SyncClient:
     def __init__(self,
                  host_url,
                  resource,
-                 api_version='',
                  auth=None,
                  params={},
                  headers=None,
@@ -34,7 +33,6 @@ class SyncClient:
                  with_priority=False):
         LOGGER.info('Init SyncClient for resource {resource}')
         self.host = host_url
-        self.version = api_version
         self.auth = auth
         self.resource = resource
         self.adaptive = adaptive
@@ -45,7 +43,7 @@ class SyncClient:
         self.queue = Queue(maxsize=retrievers_params['queue_size'])
 
     def init_client(self):
-        self.client = ResourceClient(self.host, self.version, self.resource, self.params, self.auth, self.headers)
+        self.client = ResourceClient(self.host, self.resource, self.params, self.auth, self.headers)
 
     def handle_response_data(self, data):
         for resource_item in data:
