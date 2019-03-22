@@ -99,7 +99,6 @@ class SyncClient:
 
     def log_state(self):
         LOGGER.debug(f'Retriever params state: {self.params}')
-        print(f'STATE: {self.params}')
 
     def retriever(self):
         LOGGER.info('Retriever: Start job...')

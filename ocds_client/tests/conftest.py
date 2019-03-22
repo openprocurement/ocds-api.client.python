@@ -2,6 +2,7 @@ import os
 
 import pytest
 from .utils import Response
+from ocds_client.sync import SyncClient, DEFAULT_RETRIEVERS_PARAMS
 
 CWD = os.getcwd()
 
@@ -36,3 +37,18 @@ def release_response(mocker):
     with open(f'{CWD}/ocds_client/tests/data/release-c3f4965758c9b7391f86c676f59b828a.json', 'r') as f:
         data = f.read()
     res().request.return_value = Response(data, 200)
+
+
+@pytest.fixture
+def sync_client():
+    host = 'http://localhost'
+    resource = 'record'
+    params = {'size': '10'}
+    s_client = SyncClient(host, resource, params=params)
+
+    assert s_client.host == host
+    assert s_client.resource == resource
+    assert s_client.params == params
+    assert s_client.retrievers_params == DEFAULT_RETRIEVERS_PARAMS
+    assert s_client.queue.maxsize == DEFAULT_RETRIEVERS_PARAMS['queue_size']
+    return s_client
