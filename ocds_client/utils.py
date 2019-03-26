@@ -16,33 +16,32 @@ def get_response(client, params):
             start = time()
             response = client.get_resource_items(params)
             end = time() - start
-            LOGGER.debug('Request duration {} sec'.format(end), extra={'FEEDER_REQUEST_DURATION': end * 1000})
+            LOGGER.debug(f'Request duration {end} sec', extra={'FEEDER_REQUEST_DURATION': end * 1000})
             response_fail = False
         except ConnectionError as e:
-            LOGGER.error('ConnectionError: {}'.format(repr(e)), extra={'MESSAGE_ID': 'connection_error'})
+            LOGGER.error(f'ConnectionError: {repr(e)}', extra={'MESSAGE_ID': 'connection_error'})
             if sleep_interval > 300:
                 raise e
             sleep_interval = sleep_interval * 2
-            LOGGER.debug('Client sleeping after ConnectionError {} sec.'.format(sleep_interval))
+            LOGGER.debug(f'Client sleeping after ConnectionError {sleep_interval} sec.')
             sleep(sleep_interval)
             continue
         except RequestFailed as e:
-            LOGGER.error('RequestFailed: Status code: {}'.format(e.status_code),
-                         extra={'MESSAGE_ID': 'request_failed'})
+            LOGGER.error(f'RequestFailed: Status code: {e.status_code}', extra={'MESSAGE_ID': 'request_failed'})
             if e.status_code == 429:
                 if sleep_interval > 120:
                     raise e
-                LOGGER.debug('Client sleeping after RequestFailed {} sec.'.format(sleep_interval))
+                LOGGER.debug(f'Client sleeping after RequestFailed {sleep_interval} sec.')
                 sleep_interval = sleep_interval * 2
                 sleep(sleep_interval)
                 continue
             raise e
         except Exception as e:
-            LOGGER.error('Exception: {}'.format(repr(e)), extra={'MESSAGE_ID': 'exceptions'})
+            LOGGER.error(f'Exception: {repr(e)}', extra={'MESSAGE_ID': 'exceptions'})
             if sleep_interval > 300:
                 raise e
             sleep_interval = sleep_interval * 2
-            LOGGER.debug('Client sleeping after Exception: {}, {} sec.'.format(repr(e), sleep_interval))
+            LOGGER.debug(f'Client sleeping after Exception: {repr(e)}, {sleep_interval} sec.')
             sleep(sleep_interval)
             continue
     return response

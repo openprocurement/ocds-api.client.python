@@ -21,8 +21,8 @@ tests_require = [
 setup(
     name='ocds_client',
     version=version,
-    description="",
-    long_description="{0}\n".format(open("README.md").read()),
+    description='',
+    long_description=f'{open("README.md").read()}\n',
 
     # Get more strings from
     # http://pypi.python.org/pypi?:action=list_classifiers

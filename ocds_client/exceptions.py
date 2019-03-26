@@ -5,8 +5,7 @@ class ResourceError(Exception):
 
     def __init__(self, response=None):
         self.message = getattr(response, 'text', 'Not described error yet.')
-        self.status_code \
-            = self.status_code or getattr(response, 'status_code', None)
+        self.status_code = self.status_code or getattr(response, 'status_code', None)
         self.response = response
 
     def __str__(self):  # pragma: no cover
@@ -15,8 +14,7 @@ class ResourceError(Exception):
         try:
             return str(self.__dict__)
         except (NameError, ValueError, KeyError) as e:
-            return 'Unprintable exception {}: {}'\
-                .format(self.__class__.__name__, str(e))
+            return f'Unprintable exception {self.__class__.__name__}: {str(e)}'
 
 
 class MethodNotAllowed(ResourceError):
