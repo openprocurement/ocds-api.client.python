@@ -31,7 +31,7 @@ class SyncClient:
                  retrievers_params=DEFAULT_RETRIEVERS_PARAMS,
                  adaptive=False,
                  with_priority=False):
-        LOGGER.info('Init SyncClient for resource {resource}')
+        LOGGER.info(f'Init SyncClient for resource {resource}')
         self.host = host_url
         self.auth = auth
         self.resource = resource
@@ -86,12 +86,10 @@ class SyncClient:
             if self.worker.ready():
                 self.restart_sync()
             while not self.queue.empty():
-                LOGGER.debug('Sync queue size: {}'.format(self.queue.qsize()),
-                             extra={'SYNC_QUEUE_SIZE': self.queue.qsize()})
+                LOGGER.debug(f'Sync queue size: {self.queue.qsize()}', extra={'SYNC_QUEUE_SIZE': self.queue.qsize()})
                 LOGGER.debug('Yield resource item', extra={'MESSAGE_ID': 'sync_yield'})
                 yield self.queue.get()
-            LOGGER.debug('Sync queue size: {}'.format(self.queue.qsize()),
-                         extra={'SYNC_QUEUE_SIZE': self.queue.qsize()})
+            LOGGER.debug(f'Sync queue size: {self.queue.qsize()}', extra={'SYNC_QUEUE_SIZE': self.queue.qsize()})
             try:
                 self.queue.peek(block=True, timeout=0.1)
             except Empty:
@@ -103,8 +101,8 @@ class SyncClient:
     def retriever(self):
         LOGGER.info('Retriever: Start job...')
         response = get_response(self.client, self.params)
-        LOGGER.debug('Retriever response length {} items'.format(len(response[f'{self.resource}s'])),
-                     extra={'RETRIEVER_RESPONSE_LENGTH': len(response[f'{self.resource}s'])})
+        records_len = len(response[f'{self.resource}s'])
+        LOGGER.debug(f'Retriever response length {records_len} items', extra={'RETRIEVER_RESPONSE_LENGTH': records_len})
         while True:
             self.heartbeat = time()
             while (response[f'{self.resource}s']):
@@ -114,21 +112,23 @@ class SyncClient:
                 self.params.update(params)
                 self.log_state()
                 response = get_response(self.client, self.params)
-                LOGGER.debug('Retriever response length {} items'.format(len(response[f'{self.resource}s'])),
-                             extra={'RETRIEVER_RESPONSE_LENGTH': len(response[f'{self.resource}s'])})
-                if len(response[f'{self.resource}s']) != 0:
-                    LOGGER.info('Retriever: pause between requests {} sec.'.format(
-                        self.retrievers_params.get('up_requests_sleep', 5.0)))
-                    sleep(self.retrievers_params.get('up_requests_sleep', 5.0))
-            LOGGER.info('Retriever: pause after empty response {} sec.'.format(
-                self.retrievers_params.get('up_wait_sleep', 30.0)),
-                extra={'RETRIEVER_WAIT_SLEEP': self.retrievers_params.get('up_wait_sleep', 30.0)})
-            sleep(self.retrievers_params.get('up_wait_sleep', 30.0))
+                records_len = len(response[f'{self.resource}s'])
+                LOGGER.debug(f'Retriever response length {records_len} items',
+                             extra={'RETRIEVER_RESPONSE_LENGTH': records_len})
+                if records_len != 0:
+                    timeout = self.retrievers_params.get('up_requests_sleep', 5.0)
+                    LOGGER.info(f'Retriever: pause between requests {timeout} sec.')
+                    sleep(timeout)
+            up_wait_sleep = self.retrievers_params.get('up_wait_sleep', 30.0)
+            LOGGER.info(f'Retriever: pause after empty response {up_wait_sleep} sec.',
+                        extra={'RETRIEVER_WAIT_SLEEP': up_wait_sleep})
+            sleep(up_wait_sleep)
             response = get_response(self.client, self.params)
-            LOGGER.debug('Retriever response length {} items'.format(len(response[f'{self.resource}s'])),
-                         extra={'RETRIEVER_RESPONSE_LENGTH': len(response[f'{self.resource}s'])})
+            records_len = len(response[f'{self.resource}s'])
+            LOGGER.debug(f'Retriever response length {records_len} items'.format(),
+                         extra={'RETRIEVER_RESPONSE_LENGTH': records_len})
             if self.adaptive:
-                if len(response.data) != 0:
+                if len(response[f'{self.resource}s']) != 0:
                     if (self.retrievers_params['up_wait_sleep'] > self.retrievers_params['up_wait_sleep_min']):
                         self.retrievers_params['up_wait_sleep'] -= 1
                 else:
