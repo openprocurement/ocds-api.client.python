@@ -6,10 +6,11 @@ greenlet==0.4.15
 idna==2.8
 iso8601==0.1.12
 munch==2.3.2
+pathlib==1.0.1
 py==1.8.0
-pytest==4.4.0
 pytest-cov==2.6.1
 pytest-mock==1.10.3
+pytest==4.4.0
 requests==2.21.0
 simplejson==3.16.0
 six==1.12.0

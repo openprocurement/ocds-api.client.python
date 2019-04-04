@@ -1,3 +1,4 @@
+import pathlib
 from setuptools import find_packages, setup
 
 version = '0.0.1b'
@@ -18,12 +19,15 @@ tests_require = [
     'pytest',
 ]
 
+HERE = pathlib.Path(__file__).parent
+README = (HERE / "README.md").read_text()
+
 setup(
     name='ocds-api.client.python',
     version=version,
     description='',
-    long_description=f'{open("README.md").read()}\n',
-
+    long_description=README,
+    long_description_content_type="text/markdown",
     # Get more strings from
     # http://pypi.python.org/pypi?:action=list_classifiers
     classifiers=[
@@ -36,7 +40,7 @@ setup(
     author_email='info@quintagroup.com',
     url='https://github.com/openprocurement/ocds-api.client.python',
     license='Apache Software License 2.0',
-    packages=find_packages(exclude=['ez_setup']),
+    packages=find_packages(exclude=['ez_setup', 'tests']),
     include_package_data=True,
     zip_safe=False,
     install_requires=install_requires,

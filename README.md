@@ -10,7 +10,7 @@ A `python` data retrieving and synchronization client for the OCDS API.
 
 Simply run from command line:
 ```
-pip install ocds_client
+pip install ocds-api.client.python
 ```
 
 ## Usage
