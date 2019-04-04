@@ -19,7 +19,7 @@ tests_require = [
 ]
 
 setup(
-    name='ocds_client',
+    name='ocds-api.client.python',
     version=version,
     description='',
     long_description=f'{open("README.md").read()}\n',
@@ -27,12 +27,14 @@ setup(
     # Get more strings from
     # http://pypi.python.org/pypi?:action=list_classifiers
     classifiers=[
-        "Programming Language :: Python",
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Development Status :: 4 - Beta'
     ],
-    keywords='',
+    keywords=['ocds-client', 'ocds-api', 'ocds'],
     author='Quintagroup, Ltd.',
     author_email='info@quintagroup.com',
-    url='https://github.com/openprocurement/ocds.client.python',
+    url='https://github.com/openprocurement/ocds-api.client.python',
     license='Apache Software License 2.0',
     packages=find_packages(exclude=['ez_setup']),
     include_package_data=True,
