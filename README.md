@@ -1,4 +1,4 @@
-﻿# OCDS.client.python
+﻿# ocds-api.client.python
 
 A `python` data retrieving and synchronization client for the OCDS API.
 
