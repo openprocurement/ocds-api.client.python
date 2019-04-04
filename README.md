@@ -1,4 +1,8 @@
-﻿# ocds-api.client.python
+﻿[![Build Status](https://travis-ci.com/openprocurement/ocds-api.client.python.svg?branch=master)](https://travis-ci.com/openprocurement/ocds-api.client.python)
+[![Coverage Status](https://coveralls.io/repos/github/openprocurement/ocds-api.client.python/badge.svg?branch=master)](https://coveralls.io/github/openprocurement/ocds-api.client.python?branch=master)
+
+
+# ocds-api.client.python
 
 A `python` data retrieving and synchronization client for the OCDS API.
 
