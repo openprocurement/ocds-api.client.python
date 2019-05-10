@@ -23,10 +23,10 @@ def test_start_sync(sync_client, mocker, records_list_response):
     sync_client.start_sync()
     assert 'page' in sync_client.params
     assert hasattr(sync_client, 'heartbeat')
-    assert hasattr(sync_client, 'worker')
+    assert hasattr(sync_client, 'workers')
     assert hasattr(sync_client, 'watcher')
     assert sync_client.heartbeat == 1
-    assert [mocker.call(sync_client.retriever), mocker.call(sync_client.worker_watcher)] == spawn.call_args_list
+    assert [mocker.call(sync_client.worker_watcher)] == spawn.call_args_list
 
 
 def test_restart_sync(sync_client, mocker, records_list_response):
@@ -37,6 +37,7 @@ def test_restart_sync(sync_client, mocker, records_list_response):
 
     sync_client.init_client()
     sync_client.start_sync()
+    workers = sync_client.workers
     sync_client.restart_sync()
-    assert sync_client.worker.kill.called
+    assert sync_client.workers != workers
     assert sync_client.watcher.kill.called

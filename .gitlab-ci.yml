@@ -9,7 +9,7 @@ stages:
 pytest:
   stage: tests
   script:
-    - ./bin/pytest --cov=ocds_client/
+    - ./bin/pytest -v --cov=ocds_client/
 
 flake8 check:
   stage: tests
