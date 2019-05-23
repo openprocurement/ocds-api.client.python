@@ -5,7 +5,8 @@ import logging
 from copy import deepcopy
 from urllib import parse
 from gevent import idle, spawn, sleep
-from gevent.queue import Queue, Empty
+from gevent.queue import PriorityQueue, Empty
+from ocds_client.utils import PrioritizedItem
 from ocds_client.clients import ResourceClient
 from ocds_client.workers import ForwardWorker, BackwardWorker
 from time import time
@@ -41,14 +42,15 @@ class SyncClient:
 
         self.params = params
         self.retrievers_params = retrievers_params
-        self.queue = Queue(maxsize=retrievers_params['queue_size'])
+        self.queue = PriorityQueue(maxsize=retrievers_params['queue_size'])
 
-    def init_client(self):
-        self.client = ResourceClient(self.host, self.resource, self.params, self.auth, self.headers)
+    def init_clients(self):
+        self.backward_client = ResourceClient(self.host, self.resource, self.params, self.auth, self.headers)
+        self.forward_client = ResourceClient(self.host, self.resource, self.params, self.auth, self.headers)
 
     def handle_response_data(self, data):
         for resource_item in data:
-            self.queue.put(resource_item)
+            self.queue.put(PrioritizedItem(1, resource_item))
 
     def worker_watcher(self):
         while True:
@@ -60,7 +62,7 @@ class SyncClient:
     def start_sync(self):
         LOGGER.info('Start sync...')
 
-        data = self.client.get_resource_items(self.params)
+        data = self.backward_client.get_resource_items(self.params)
 
         self.handle_response_data(data[f'{self.resource}s'])
 
@@ -69,8 +71,8 @@ class SyncClient:
         backward_params = deepcopy(self.params)
         backward_params.update({k: v[0] for k, v in parse.parse_qs(parse.urlparse(data.links.next).query).items()})
 
-        self.forward_worker = ForwardWorker(sync_client=self, client=self.client, params=forward_params)
-        self.backward_worker = BackwardWorker(sync_client=self, client=self.client, params=backward_params)
+        self.forward_worker = ForwardWorker(sync_client=self, client=self.forward_client, params=forward_params)
+        self.backward_worker = BackwardWorker(sync_client=self, client=self.backward_client, params=backward_params)
         self.workers = [self.forward_worker, self.backward_worker]
 
         for worker in self.workers:
@@ -87,11 +89,11 @@ class SyncClient:
         for worker in self.workers:
             worker.kill()
         self.watcher.kill()
-        self.init_client()
+        self.init_clients()
         self.start_sync()
 
     def get_resource_items(self):
-        self.init_client()
+        self.init_clients()
         self.start_sync()
         while True:
             if self.forward_worker.check() or self.backward_worker.check():
@@ -99,7 +101,8 @@ class SyncClient:
             while not self.queue.empty():
                 LOGGER.debug(f'Sync queue size: {self.queue.qsize()}', extra={'SYNC_QUEUE_SIZE': self.queue.qsize()})
                 LOGGER.debug('Yield resource item', extra={'MESSAGE_ID': 'sync_yield'})
-                yield self.queue.get()
+                item = self.queue.get()
+                yield item.data
             LOGGER.debug(f'Sync queue size: {self.queue.qsize()}', extra={'SYNC_QUEUE_SIZE': self.queue.qsize()})
             try:
                 self.queue.peek(block=True, timeout=0.1)
