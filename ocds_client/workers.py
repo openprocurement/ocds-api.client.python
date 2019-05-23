@@ -6,7 +6,7 @@ from gevent import Greenlet, sleep
 from time import time
 from urllib import parse
 
-from ocds_client.utils import get_response
+from ocds_client.utils import get_response, PrioritizedItem
 
 
 LOGGER = logging.getLogger(__name__)
@@ -20,22 +20,24 @@ class BaseWorker(Greenlet):
         self.resource = self.sync_client.resource
         self.retrievers_params = self.sync_client.retrievers_params
         self.adaptive = self.sync_client.adaptive
-        self.client = client
+        self.client = sync_client.forward_client
         self.params = params
         self.exit_successful = False
+        self.queue_priority = 1
 
     def log_state(self):
         LOGGER.debug(f'{self.name} params state: {self.params}')
 
     def handle_response_data(self, data):
         for resource_item in data:
-            self.sync_client.queue.put(resource_item)
+            self.sync_client.queue.put(PrioritizedItem(self.queue_priority, resource_item))
 
     def _run(self):
         LOGGER.info(f'{self.name}: Start job...')
         response = get_response(self.client, self.params)
         records_len = len(response[f'{self.resource}s'])
-        LOGGER.debug(f'Retriever response length {records_len} items', extra={'RETRIEVER_RESPONSE_LENGTH': records_len})
+        LOGGER.debug(f'Retriever response length {records_len} items',
+                     extra={'{self.name.upper()}_RESPONSE_LENGTH': records_len})
         while not self.exit_successful:
             self.sync_client.heartbeat = time()
             while (response[f'{self.resource}s']):
@@ -47,7 +49,7 @@ class BaseWorker(Greenlet):
                 response = get_response(self.client, self.params)
                 records_len = len(response[f'{self.resource}s'])
                 LOGGER.debug(f'{self.name} response length {records_len} items',
-                             extra={'RETRIEVER_RESPONSE_LENGTH': records_len})
+                             extra={'{self.name.upper()}_RESPONSE_LENGTH': records_len})
                 if records_len != 0:
                     timeout = self.retrievers_params.get('up_requests_sleep', 5.0)
                     LOGGER.info(f'{self.name}: pause between requests {timeout} sec.')
@@ -61,7 +63,7 @@ class BaseWorker(Greenlet):
             response = get_response(self.client, self.params)
             records_len = len(response[f'{self.resource}s'])
             LOGGER.debug(f'{self.name} response length {records_len} items',
-                         extra={f'{self.name}_RESPONSE_LENGTH': records_len})
+                         extra={f'{self.name.upper()}_RESPONSE_LENGTH': records_len})
             if self.adaptive:
                 if len(response[f'{self.resource}s']) != 0:
                     if self.retrievers_params['up_wait_sleep'] > self.retrievers_params['up_wait_sleep_min']:
@@ -80,6 +82,8 @@ class ForwardWorker(BaseWorker):
     def __init__(self, sync_client, client, params):
         super().__init__(sync_client, client, params)
         self.name = 'ForwardWorker'
+        self.queue_priority = 1
+        self.client = sync_client.forward_client
 
     def check(self):
         return self.ready()
@@ -91,6 +95,8 @@ class BackwardWorker(BaseWorker):
         super().__init__(sync_client, client, params)
         self.name = 'BackwardWorker'
         self.exit_successful = False
+        self.queue_priority = 1000
+        self.client = sync_client.backward_client
 
     def check(self):
         if not self.exit_successful:

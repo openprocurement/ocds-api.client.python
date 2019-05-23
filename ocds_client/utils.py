@@ -1,11 +1,18 @@
 import logging
 from time import time
-
+from dataclasses import dataclass, field
+from typing import Any
 from gevent import sleep
 
 from ocds_client.exceptions import RequestFailed
 
 LOGGER = logging.getLogger(__name__)
+
+
+@dataclass(order=True)
+class PrioritizedItem:
+    priority: int
+    data: Any = field(compare=False)
 
 
 def get_response(client, params):

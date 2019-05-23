@@ -2,12 +2,12 @@ def test_handle_response_data(records_list_response, sync_client):
     assert sync_client.resource == 'record'
     assert sync_client.queue.qsize() == 0
 
-    sync_client.init_client()
-    data = sync_client.client.get_resource_items()
+    sync_client.init_clients()
+    data = sync_client.backward_client.get_resource_items()
     sync_client.handle_response_data(data.records)
     assert sync_client.queue.qsize() == 10
     record = sync_client.queue.get()
-    assert set(record.keys()) == {'ocid', 'compiledRelease', 'releases'}
+    assert set(record.data.keys()) == {'ocid', 'compiledRelease', 'releases'}
 
 
 def test_start_sync(sync_client, mocker, records_list_response):
@@ -19,7 +19,7 @@ def test_start_sync(sync_client, mocker, records_list_response):
     assert not hasattr(sync_client, 'worker')
     assert not hasattr(sync_client, 'watcher')
 
-    sync_client.init_client()
+    sync_client.init_clients()
     sync_client.start_sync()
     assert 'page' in sync_client.params
     assert hasattr(sync_client, 'heartbeat')
@@ -35,7 +35,7 @@ def test_restart_sync(sync_client, mocker, records_list_response):
     assert not hasattr(sync_client, 'worker')
     assert not hasattr(sync_client, 'watcher')
 
-    sync_client.init_client()
+    sync_client.init_clients()
     sync_client.start_sync()
     workers = sync_client.workers
     sync_client.restart_sync()

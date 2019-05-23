@@ -2,6 +2,7 @@ image: python:3.6-alpine
 before_script:
   - virtualenv --clear --never-download -p python3 .
   - ./bin/pip install -U pip setuptools
+  - ./bin/pip install -r requirements.txt
   - ./bin/pip install -e '.[test]'
 stages:
   - tests
