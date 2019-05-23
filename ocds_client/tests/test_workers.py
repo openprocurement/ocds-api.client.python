@@ -3,8 +3,10 @@ import os
 
 from .utils import Response
 from gevent import spawn, sleep
+from munch import munchify
 from unittest import TestCase
 from unittest.mock import patch, MagicMock
+from urllib import parse
 
 from ocds_client.sync import SyncClient
 
@@ -48,6 +50,13 @@ class TestWorkers(TestCase):
         self.assertEqual(self.sync_client.backward_worker.exit_successful, False)
         self.assertEqual(self.sync_client.forward_worker.ready(), False)
         self.assertEqual(self.sync_client.forward_worker.exit_successful, False)
+
+        # check if workers getting correct params
+        data = munchify(json.loads(self.data))
+        self.assertEqual(self.sync_client.forward_worker.get_params(data),
+                         {k: v[0] for k, v in parse.parse_qs(parse.urlparse(data.links.prev).query).items()})
+        self.assertEqual(self.sync_client.backward_worker.get_params(data),
+                         {k: v[0] for k, v in parse.parse_qs(parse.urlparse(data.links.next).query).items()})
 
         # emulate backward worker finished sync
         json_data = json.loads(self.data)

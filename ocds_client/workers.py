@@ -25,6 +25,9 @@ class BaseWorker(Greenlet):
         self.exit_successful = False
         self.queue_priority = 1
 
+    def get_params(self, response):
+        raise NotImplementedError("Subclasses should implement this!")
+
     def log_state(self):
         LOGGER.debug(f'{self.name} params state: {self.params}')
 
@@ -43,7 +46,7 @@ class BaseWorker(Greenlet):
             while (response[f'{self.resource}s']):
                 self.sync_client.heartbeat = time()
                 self.handle_response_data(response[f'{self.resource}s'])
-                params = {k: v[0] for k, v in parse.parse_qs(parse.urlparse(response.links.next).query).items()}
+                params = self.get_params(response)
                 self.params.update(params)
                 self.log_state()
                 response = get_response(self.client, self.params)
@@ -88,6 +91,10 @@ class ForwardWorker(BaseWorker):
     def check(self):
         return self.ready()
 
+    def get_params(self, response):
+        params = {k: v[0] for k, v in parse.parse_qs(parse.urlparse(response.links.prev).query).items()}
+        return params
+
 
 class BackwardWorker(BaseWorker):
 
@@ -102,3 +109,7 @@ class BackwardWorker(BaseWorker):
         if not self.exit_successful:
             return self.ready()
         return False
+
+    def get_params(self, response):
+        params = {k: v[0] for k, v in parse.parse_qs(parse.urlparse(response.links.next).query).items()}
+        return params
