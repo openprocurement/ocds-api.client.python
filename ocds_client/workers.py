@@ -37,7 +37,7 @@ class BaseWorker(Greenlet):
         response = get_response(self.client, self.params)
         records_len = len(response[f'{self.resource}s'])
         LOGGER.debug(f'Retriever response length {records_len} items',
-                     extra={'{self.name.upper()}_RESPONSE_LENGTH': records_len})
+                     extra={f'{self.name.upper()}_RESPONSE_LENGTH': records_len})
         while not self.exit_successful:
             self.sync_client.heartbeat = time()
             while (response[f'{self.resource}s']):
@@ -49,7 +49,7 @@ class BaseWorker(Greenlet):
                 response = get_response(self.client, self.params)
                 records_len = len(response[f'{self.resource}s'])
                 LOGGER.debug(f'{self.name} response length {records_len} items',
-                             extra={'{self.name.upper()}_RESPONSE_LENGTH': records_len})
+                             extra={f'{self.name.upper()}_RESPONSE_LENGTH': records_len})
                 if records_len != 0:
                     timeout = self.retrievers_params.get('up_requests_sleep', 5.0)
                     LOGGER.info(f'{self.name}: pause between requests {timeout} sec.')
