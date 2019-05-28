@@ -23,6 +23,8 @@ DEFAULT_RETRIEVERS_PARAMS = {
 
 class SyncClient:
     idle = idle
+    backward_class = BackwardWorker
+    forward_class = ForwardWorker
 
     def __init__(self,
                  host_url,
@@ -71,8 +73,9 @@ class SyncClient:
         backward_params = deepcopy(self.params)
         backward_params.update({k: v[0] for k, v in parse.parse_qs(parse.urlparse(data.links.next).query).items()})
 
-        self.forward_worker = ForwardWorker(sync_client=self, client=self.forward_client, params=forward_params)
-        self.backward_worker = BackwardWorker(sync_client=self, client=self.backward_client, params=backward_params)
+        self.forward_worker = self.forward_class(sync_client=self, client=self.forward_client, params=forward_params)
+        self.backward_worker = self.backward_class(sync_client=self, client=self.backward_client,
+                                                   params=backward_params)
         self.workers = [self.forward_worker, self.backward_worker]
 
         for worker in self.workers:
