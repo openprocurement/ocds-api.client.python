@@ -10,6 +10,7 @@ install_requires = [
     'munch',
     'requests',
     'simplejson',
+    'dataclasses==0.6 ; python_version == "3.6"',
 ]
 
 tests_require = [
